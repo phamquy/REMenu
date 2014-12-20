@@ -114,6 +114,10 @@ typedef NS_ENUM(NSInteger, REMenuLiveBackgroundStyle) {
 @property (assign, readwrite, nonatomic) REMenuLiveBackgroundStyle liveBlurBackgroundStyle; // Available only in iOS 7
 @property (copy, readwrite, nonatomic) void (^badgeLabelConfigurationBlock)(UILabel *badgeLabel, REMenuItem *item);
 
+// Height of menu, if the content of menu is greater menuHeight, menu will be scrollable
+// if set to 0, menu will use content height. Default set to 0.
+@property (assign, readwrite, nonatomic)  CGFloat menuHeight;
+
 - (id)initWithItems:(NSArray *)items;
 - (void)showFromRect:(CGRect)rect inView:(UIView *)view;
 - (void)showInView:(UIView *)view;

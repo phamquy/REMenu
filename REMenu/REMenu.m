@@ -27,6 +27,8 @@
 #import "REMenuItem.h"
 #import "REMenuItemView.h"
 
+
+#define kREMenuTopPadding 40.0f
 @interface REMenuItem ()
 
 @property (assign, readwrite, nonatomic) REMenuItemView *itemView;
@@ -35,7 +37,8 @@
 
 @interface REMenu ()
 
-@property (strong, readwrite, nonatomic) UIView *menuView;
+//@property (strong, readwrite, nonatomic) UIView *menuView;
+@property (strong, readwrite, nonatomic) UIScrollView *menuView;
 @property (strong, readwrite, nonatomic) UIView *menuWrapperView;
 @property (strong, readwrite, nonatomic) REMenuContainerView *containerView;
 @property (strong, readwrite, nonatomic) UIButton *backgroundButton;
@@ -132,7 +135,7 @@
     });
     
     self.menuView = ({
-        UIView *view = [[UIView alloc] init];
+        UIScrollView *view = [[UIScrollView alloc] init];
         if (!self.liveBlur || !REUIKitIsFlatMode()) {
             view.backgroundColor = self.backgroundColor;
         }
@@ -145,6 +148,21 @@
         view.autoresizingMask = UIViewAutoresizingFlexibleWidth;
         view;
     });
+
+    //    self.menuView = ({
+    //        UIView *view = [[UIView alloc] init];
+    //        if (!self.liveBlur || !REUIKitIsFlatMode()) {
+    //            view.backgroundColor = self.backgroundColor;
+    //        }
+    //        view.layer.cornerRadius = self.cornerRadius;
+    //        view.layer.borderColor = self.borderColor.CGColor;
+    //        view.layer.borderWidth = self.borderWidth;
+    //        view.layer.masksToBounds = YES;
+    //        view.layer.shouldRasterize = YES;
+    //        view.layer.rasterizationScale = [UIScreen mainScreen].scale;
+    //        view.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    //        view;
+    //    });
     
     if (REUIKitIsFlatMode()) {
         self.toolbar = ({
@@ -195,16 +213,18 @@
         if (index == self.items.count - 1)
             itemHeight += self.cornerRadius;
         
-        UIView *separatorView = [[UIView alloc] initWithFrame:CGRectMake(self.separatorOffset.width,
-                                                                         index * self.itemHeight + index * self.separatorHeight + 40.0 + navigationBarOffset + self.separatorOffset.height,
-                                                                         rect.size.width - self.separatorOffset.width,
-                                                                         self.separatorHeight)];
+        UIView *separatorView =
+        [[UIView alloc]
+         initWithFrame:CGRectMake(self.separatorOffset.width,
+                                  index * self.itemHeight + index * self.separatorHeight + kREMenuTopPadding + navigationBarOffset + self.separatorOffset.height,
+                                  rect.size.width - self.separatorOffset.width,
+                                  self.separatorHeight)];
         separatorView.backgroundColor = self.separatorColor;
         separatorView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
         [self.menuView addSubview:separatorView];
         
         REMenuItemView *itemView = [[REMenuItemView alloc] initWithFrame:CGRectMake(0,
-                                                                                    index * self.itemHeight + (index + 1.0) * self.separatorHeight + 40.0 + navigationBarOffset,
+                                                                                    index * self.itemHeight + (index + 1.0) * self.separatorHeight + kREMenuTopPadding + navigationBarOffset,
                                                                                     rect.size.width,
                                                                                     itemHeight)
                                                                     menu:self item:item
@@ -222,8 +242,15 @@
     
     // Set up frames
     //
-    self.menuWrapperView.frame = CGRectMake(0, -self.combinedHeight - navigationBarOffset, rect.size.width, self.combinedHeight + navigationBarOffset);
+//    self.menuWrapperView.frame = CGRectMake(0, -self.combinedHeight - navigationBarOffset, rect.size.width, self.combinedHeight + navigationBarOffset);
+
+    
+    self.menuWrapperView.frame = CGRectMake(0, -self.menuHeight - navigationBarOffset, rect.size.width, self.menuHeight + navigationBarOffset);
+
+    
     self.menuView.frame = self.menuWrapperView.bounds;
+    [self.menuView setContentSize:CGSizeMake(self.menuView.frame.size.width, self.combinedHeight + navigationBarOffset)];
+    
     if (REUIKitIsFlatMode() && self.liveBlur) {
         self.toolbar.frame = self.menuWrapperView.bounds;
     }
@@ -257,7 +284,7 @@
                              animations:^{
                  self.backgroundView.alpha = self.backgroundAlpha;
                  CGRect frame = self.menuView.frame;
-                 frame.origin.y = -40.0 - self.separatorHeight;
+                 frame.origin.y = -kREMenuTopPadding - self.separatorHeight;
                  self.menuWrapperView.frame = frame;
              } completion:^(BOOL finished) {
                  self.isAnimating = NO;
@@ -272,7 +299,7 @@
                              animations:^{
                  self.backgroundView.alpha = self.backgroundAlpha;
                  CGRect frame = self.menuView.frame;
-                 frame.origin.y = -40.0 - self.separatorHeight;
+                 frame.origin.y = -kREMenuTopPadding - self.separatorHeight;
                  self.menuWrapperView.frame = frame;
              } completion:^(BOOL finished) {
                  self.isAnimating = NO;
@@ -289,7 +316,7 @@
                          animations:^{
             self.backgroundView.alpha = self.backgroundAlpha;
             CGRect frame = self.menuView.frame;
-            frame.origin.y = -40.0 - self.separatorHeight;
+            frame.origin.y = -kREMenuTopPadding - self.separatorHeight;
             self.menuWrapperView.frame = frame;
         } completion:^(BOOL finished) {
             self.isAnimating = NO;
@@ -388,9 +415,16 @@
 
 - (CGFloat)combinedHeight
 {
-    return self.items.count * self.itemHeight + self.items.count * self.separatorHeight + 40.0 + self.cornerRadius;
+    return self.items.count * self.itemHeight + self.items.count * self.separatorHeight + kREMenuTopPadding + self.cornerRadius;
 }
 
+- (CGFloat) menuHeight{
+    if (_menuHeight) {
+        return (_menuHeight + kREMenuTopPadding) > [self combinedHeight] ? [self combinedHeight]: _menuHeight + kREMenuTopPadding;
+    }else{
+        return  [self combinedHeight];
+    }
+}
 - (void)setNeedsLayout
 {
     [UIView animateWithDuration:0.35 animations:^{
